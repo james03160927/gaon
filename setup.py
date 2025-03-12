@@ -10,6 +10,7 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         "typer>=0.9.0",
+        "rich>=13.0.0",
         "pyodbc>=4.0.39",
         "google-cloud-storage>=2.14.0",
         "pydantic>=2.6.0",
