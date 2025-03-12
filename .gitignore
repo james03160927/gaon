@@ -35,8 +35,7 @@ ENV/
 
 # Project specific
 *.log
-credentials.json
-*_credentials.json
+gaon-integrate-service-account-credentials.json
 *.dsn
 *.config
 .env*
