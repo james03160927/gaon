@@ -1,3 +1,6 @@
+"""
+Configuration management for Gaon
+"""
 import json
 import logging
 from pathlib import Path
@@ -16,12 +19,13 @@ class SourceConfig(BaseModel):
     source_type: str
     dsn: str
 
-class GaonConfig(BaseModel):
+class Config(BaseModel):
+    """Main configuration class."""
     storage: StorageConfig
     sources: List[SourceConfig]
 
     @classmethod
-    def from_json(cls, config_path: Path) -> "GaonConfig":
+    def from_json(cls, config_path: Path) -> "Config":
         """Load config from a JSON file"""
         logger.debug(f"Loading config from: {config_path}")
             
@@ -40,19 +44,44 @@ class GaonConfig(BaseModel):
             return config
 
 # Global config instance
-_config: Optional[GaonConfig] = None
+_config: Optional[Config] = None
 
-def get_config() -> GaonConfig:
-    """Get the global config instance"""
+def get_config() -> Config:
+    """Get the current configuration.
+    
+    Returns:
+        Config: Current configuration
+        
+    Raises:
+        ValueError: If configuration hasn't been loaded
+    """
     if _config is None:
-        logger.error("Config not initialized. Call load_config first.")
-        raise RuntimeError("Config not initialized. Call load_config first.")
+        raise ValueError("Configuration not loaded. Call load_config first.")
     return _config
 
-def load_config(config_path: Path) -> GaonConfig:
-    """Load and validate the config file"""
-    logger.info(f"Loading configuration from {config_path}")
+def load_config(config_path: Path) -> Config:
+    """Load configuration from a file.
+    
+    Args:
+        config_path: Path to the configuration file
+        
+    Returns:
+        Config: Loaded configuration
+        
+    Raises:
+        ValueError: If the configuration is invalid
+    """
     global _config
-    _config = GaonConfig.from_json(config_path)
-    logger.info("Configuration loaded successfully")
-    return _config
+    
+    if not config_path.exists():
+        raise ValueError(f"Config file not found: {config_path}")
+        
+    try:
+        with open(config_path) as f:
+            config_data = json.load(f)
+        
+        _config = Config(**config_data)
+        return _config
+        
+    except Exception as e:
+        raise ValueError(f"Failed to load config: {str(e)}")

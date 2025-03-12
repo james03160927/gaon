@@ -11,6 +11,10 @@ echo Activating virtual environment...
 call venv\Scripts\activate
 
 echo.
+echo Installing dependencies from requirements.txt...
+pip install -r requirements.txt
+
+echo.
 echo Installing package...
 pip install -e .
 
@@ -19,8 +23,8 @@ echo Checking installation location...
 where gaon
 
 echo.
-echo Checking if gaon is installed...
-pip list | findstr gaon
+echo Checking installed packages...
+pip list
 
 echo.
 echo Installation complete. Try running:

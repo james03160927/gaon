@@ -11,7 +11,7 @@ A data integration tool for managing and processing data from various sources.
 
 ### Windows Installation Steps
 
-#### Option 1: Using the Installation Script
+#### Option 1: Using the Installation Script (Recommended)
 1. Clone the repository:
 ```cmd
 git clone https://github.com/your-username/gaon.git
@@ -40,8 +40,23 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-4. Install the package in development mode:
+4. Install all dependencies and package:
 ```cmd
+pip install -r requirements.txt
+pip install -e .
+```
+
+#### Option 3: Direct Installation
+1. Clone and navigate to the repository
+2. Create and activate virtual environment
+3. Install each dependency manually:
+```cmd
+pip install typer>=0.9.0
+pip install rich>=13.0.0
+pip install pyodbc>=4.0.39
+pip install google-cloud-storage>=2.14.0
+pip install pydantic>=2.6.0
+pip install typing-extensions>=4.9.0
 pip install -e .
 ```
 

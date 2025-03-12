@@ -2,6 +2,4 @@
 Integration module for Gaon
 """
 
-from .core import integrate_source
-
-__all__ = ['integrate_source'] 
+# Remove the core import since we moved that functionality to main.py 

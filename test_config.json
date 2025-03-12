@@ -1,7 +1,7 @@
 {
     "storage": {
-        "bucket_name": "your-bucket-name",
-        "credentials_path": "path/to/credentials.json"
+        "bucket_name": "raw_input_data",
+        "credentials_path": "gaon-integrate-service-account-credentials.json"
     },
     "sources": [
         {

@@ -4,13 +4,14 @@ Main CLI implementation for Gaon
 import logging
 from pathlib import Path
 from typing import Optional, Annotated
+from datetime import datetime
 
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
 
 from gaon.config.config import load_config, get_config
-from gaon.integrate.core import integrate_source
+from gaon.storage.gcp.storage import GCPStorage
 
 # Set up logging
 logging.basicConfig(
@@ -39,7 +40,7 @@ def entry(
             envvar="GAON_CONFIG",
             show_default=True,
         )
-    ] = Path("config.json"),
+    ] = Path("test_config.json"),
     verbose: Annotated[
         bool,
         typer.Option(
@@ -70,30 +71,24 @@ def entry(
             raise typer.Exit(1)
 
 @app.command()
-def integrate(
-    source_name: Annotated[
-        str,
-        typer.Option(
-            "--source", "-s",
-            help="Name of the source to integrate with",
-            prompt="Enter source name",
-        )
-    ],
+def upload(
     dry_run: Annotated[
         bool,
         typer.Option(
             "--dry-run",
-            help="Show what would be done without making changes",
+            help="Show what would be done without uploading",
         )
     ] = False,
 ) -> None:
     """
-    Setup and run a data source integration.
+    Upload test.csv file to GCP storage under example_source.
     """
     try:
-        logger.info(f"Starting integration for source: {source_name}")
+        source_name = "example_source"
+        logger.info(f"Starting upload for source: {source_name}")
         config = get_config()
         
+        # Look up source configuration
         logger.debug("Looking up source configuration")
         source = next((s for s in config.sources if s.name == source_name), None)
         if not source:
@@ -101,18 +96,34 @@ def integrate(
             console.print(f"[red]Error:[/red] Source '{source_name}' not found in config")
             raise typer.Exit(1)
         
-        logger.info(f"Integrating with [blue]{source.name}[/blue] ({source.source_type})")
-        if dry_run:
-            logger.info("Dry run mode - no changes will be made")
-            console.print("[yellow]Dry run mode - no changes will be made[/yellow]")
+        # Check if test.csv exists
+        test_file = Path("test.csv")
+        if not test_file.exists():
+            logger.error("test.csv not found in current directory")
+            console.print("[red]Error:[/red] test.csv not found in current directory")
+            raise typer.Exit(1)
         
-        logger.debug(f"Starting integration with source config: {source.model_dump_json(indent=2)}")
-        integrate_source(source, dry_run=dry_run)
-        logger.info("Integration completed successfully")
+        # Initialize GCP storage
+        logger.debug("Initializing GCP storage")
+        storage = GCPStorage(config.storage)
+        
+        # Generate date prefix for the current time
+        date_prefix = datetime.now().strftime("%Y-%m-%d_%H")
+        
+        logger.info(f"Uploading test.csv to [blue]{source.name}[/blue]")
+        if dry_run:
+            logger.info("Dry run mode - no files will be uploaded")
+            console.print("[yellow]Dry run mode - no files will be uploaded[/yellow]")
+            logger.info(f"Would upload {test_file} to: {source.name}/{date_prefix}/{test_file.name}")
+            return
+        
+        # Upload the file
+        remote_path = storage.upload(source, date_prefix, test_file)
+        logger.info(f"Successfully uploaded file to: {remote_path}")
         
     except Exception as e:
-        logger.exception("Error during integration")
-        console.print(f"[red]Error during integration:[/red] {str(e)}")
+        logger.exception("Error during upload")
+        console.print(f"[red]Error during upload:[/red] {str(e)}")
         raise typer.Exit(1)
 
 if __name__ == "__main__":

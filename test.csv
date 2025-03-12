@@ -1,0 +1,6 @@
+customer_id,first_name,last_name,email,order_date,total_amount
+1001,John,Smith,john.smith@email.com,2024-03-15,125.50
+1002,Sarah,Johnson,sarah.j@email.com,2024-03-14,89.99
+1003,Michael,Brown,mbrown@email.com,2024-03-14,245.75
+1004,Emily,Davis,emily.davis@email.com,2024-03-13,67.25
+1005,Robert,Wilson,rwilson@email.com,2024-03-12,178.30
