@@ -6,7 +6,7 @@ from google.cloud import storage
 from google.cloud.storage import Bucket, Client
 from google.oauth2 import service_account
 
-from gaon.config import StorageConfig, SourceConfig
+from gaon.config.models import StorageConfig, SourceConfig
 from gaon.storage.base import BaseStorage
 
 # Set up logging
@@ -25,6 +25,38 @@ class GCPStorage(BaseStorage):
         self._bucket: Optional[Bucket] = None
         super().__init__(storage_config)
 
+    def _validate_storage_access(self) -> None:
+        """Validate read/write access to the bucket by performing test operations.
+        
+        Raises:
+            ValueError: If the required permissions are not available
+        """
+        test_blob_name = "test_access_validation"
+        test_content = b"Testing storage access"
+        
+        try:
+            # Test write access by creating a blob
+            logger.debug("Testing write access...")
+            blob = self._bucket.blob(test_blob_name)
+            blob.upload_from_string(test_content)
+            logger.debug("Write access confirmed")
+            
+            # Test read access by downloading the blob
+            logger.debug("Testing read access...")
+            downloaded_content = blob.download_as_bytes()
+            if downloaded_content != test_content:
+                raise ValueError("Data integrity check failed")
+            logger.debug("Read access confirmed")
+            
+            # Clean up the test blob
+            logger.debug("Cleaning up test blob...")
+            blob.delete()
+            logger.debug("Test blob cleaned up successfully")
+            
+            logger.info("Successfully validated read/write access to GCP storage")
+            
+        except Exception as e:
+            raise ValueError(f"Storage access validation failed: {str(e)}")
 
     def _initialize(self) -> None:
         """Initialize GCP storage client and bucket.

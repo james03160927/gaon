@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from pathlib import Path
 
-from gaon.config import StorageConfig, SourceConfig
+from gaon.config.models import StorageConfig, SourceConfig
 
 
 class BaseStorage(ABC):

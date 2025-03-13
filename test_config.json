@@ -5,9 +5,69 @@
     },
     "sources": [
         {
-            "name": "example_source",
-            "source_type": "sql",
-            "dsn": "Driver={ODBC Driver 17 for SQL Server};Server=server_name;Database=db_name;UID=username;PWD=password"
+            "name": "hubspot",
+            "source_type": "hubspot",
+            "batch_size": 100,
+            "start_time": "2024-03-01T00:00:00Z",
+            "end_time": "2024-03-12T23:59:59Z",
+            "cadence": "daily",
+            "source_config": {
+                "api_key": "",
+                "objects": {
+                    "contacts": {
+                        "enabled": true,
+                        "properties": [
+                            "email",
+                            "firstname",
+                            "lastname",
+                            "phone",
+                            "company",
+                            "createdate",
+                            "lastmodifieddate"
+                        ]
+                    },
+                    "companies": {
+                        "enabled": true,
+                        "properties": [
+                            "name",
+                            "domain",
+                            "industry",
+                            "website",
+                            "phone",
+                            "address",
+                            "city",
+                            "state",
+                            "country",
+                            "createdate",
+                            "lastmodifieddate"
+                        ]
+                    },
+                    "deals": {
+                        "enabled": true,
+                        "properties": [
+                            "dealname",
+                            "pipeline",
+                            "dealstage",
+                            "amount",
+                            "closedate",
+                            "createdate",
+                            "lastmodifieddate"
+                        ]
+                    },
+                    "tickets": {
+                        "enabled": true,
+                        "properties": [
+                            "subject",
+                            "content",
+                            "hs_pipeline",
+                            "hs_pipeline_stage",
+                            "hs_ticket_priority",
+                            "createdate",
+                            "lastmodifieddate"
+                        ]
+                    }
+                }
+            }
         }
     ]
 }

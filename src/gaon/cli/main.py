@@ -12,6 +12,7 @@ from rich.logging import RichHandler
 
 from gaon.config.config import load_config, get_config
 from gaon.storage.gcp.storage import GCPStorage
+from gaon.integrate.sources.hubspot.client import HubspotClient
 
 # Set up logging
 logging.basicConfig(
@@ -69,6 +70,63 @@ def entry(
             logger.exception("Error loading config")
             console.print(f"[red]Error loading config:[/red] {str(e)}")
             raise typer.Exit(1)
+
+@app.command()
+def extract(
+    source: Annotated[
+        str,
+        typer.Argument(
+            help="Name of the source to extract data from",
+        )
+    ],
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="Show what would be done without actually extracting data",
+        )
+    ] = False,
+) -> None:
+    """
+    Extract data from a configured source.
+    """
+    try:
+        logger.info(f"Starting data extraction for source: {source}")
+        config = get_config()
+        
+        # Look up source configuration
+        logger.debug("Looking up source configuration")
+        source_config = next((s for s in config.sources if s.name == source), None)
+        if not source_config:
+            logger.error(f"Source '{source}' not found in config")
+            console.print(f"[red]Error:[/red] Source '{source}' not found in config")
+            raise typer.Exit(1)
+        
+        # Initialize appropriate client based on source type
+        if source_config.source_type == "hubspot":
+            client = HubspotClient(source_config)
+        else:
+            logger.error(f"Unsupported source type: {source_config.source_type}")
+            console.print(f"[red]Error:[/red] Unsupported source type: {source_config.source_type}")
+            raise typer.Exit(1)
+        
+        if dry_run:
+            logger.info("Dry run mode - no data will be extracted")
+            console.print("[yellow]Dry run mode - no data will be extracted[/yellow]")
+            logger.info(f"Would extract data from {source} between {source_config.start_time} and {source_config.end_time}")
+            return
+        
+        # Extract data
+        logger.info(f"Extracting data from {source} between {source_config.start_time} and {source_config.end_time}")
+        for temp_file in client.extract(source_config.start_time, source_config.end_time):
+            logger.info(f"Extracted batch to: {temp_file}")
+        
+        logger.info(f"Successfully completed data extraction for {source}")
+        
+    except Exception as e:
+        logger.exception("Error during data extraction")
+        console.print(f"[red]Error during data extraction:[/red] {str(e)}")
+        raise typer.Exit(1)
 
 @app.command()
 def upload(
