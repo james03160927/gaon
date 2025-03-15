@@ -1,6 +1,9 @@
+"""
+GCP storage implementation
+"""
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 from google.cloud import storage
 from google.cloud.storage import Bucket, Client
@@ -8,6 +11,7 @@ from google.oauth2 import service_account
 
 from gaon.config.models import StorageConfig, SourceConfig
 from gaon.storage.base import BaseStorage
+from gaon.config.config import get_config
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -74,10 +78,9 @@ class GCPStorage(BaseStorage):
         try:
             # Initialize GCP client with credentials
             logger.debug("Initializing GCP client...")
-            credentials = service_account.Credentials.from_service_account_file(
+            self._client = storage.Client.from_service_account_json(
                 str(credentials_path)
             )
-            self._client = storage.Client(credentials=credentials)
             logger.debug("Successfully initialized GCP client")
             
             # Get and validate bucket access
@@ -92,33 +95,39 @@ class GCPStorage(BaseStorage):
         except Exception as e:
             raise ValueError(f"Failed to initialize GCP storage: {str(e)}")
 
-    def upload(self, source_config: SourceConfig, date_prefix: str, local_file: Path) -> str:
+    def upload(self, source_config: Any, date_prefix: str, file_path: Path, remote_name: Optional[str] = None) -> str:
         """Upload a file to GCP storage.
         
         Args:
-            source_config: Source configuration containing source name and type
-            date_prefix: Date prefix string in format yyyy-mm-dd_HH
-            local_file: Local file path to upload
+            source_config: Source configuration
+            date_prefix: Date prefix for the remote path
+            file_path: Path to the file to upload
+            remote_name: Optional name for the remote file (if different from local)
             
         Returns:
-            str: Remote storage path where file was uploaded
+            str: Remote path where the file was uploaded
             
         Raises:
-            ValueError: If file upload fails
+            ValueError: If upload fails
         """
-        if not local_file.exists():
-            raise ValueError(f"Local file not found: {local_file}")
-            
-        remote_path = self._build_remote_path(
-            source_config.name,
-            date_prefix,
-            local_file.name
-        )
-        
         try:
+            # Get client name from config
+            config = get_config()
+            client_name = config.client
+            
+            # Construct remote path: bucket/client/source/date/file
+            remote_path = f"{client_name}/{source_config.name}/{date_prefix}"
+            if remote_name:
+                remote_path = f"{remote_path}/{remote_name}"
+            else:
+                remote_path = f"{remote_path}/{file_path.name}"
+            
+            # Upload file
             blob = self._bucket.blob(remote_path)
-            blob.upload_from_filename(str(local_file))
+            blob.upload_from_filename(str(file_path))
+            
             logger.debug(f"Successfully uploaded file to: {remote_path}")
             return remote_path
+            
         except Exception as e:
             raise ValueError(f"Failed to upload file to GCP: {str(e)}")

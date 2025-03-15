@@ -2,7 +2,7 @@
 Configuration models for Gaon
 """
 from datetime import datetime
-from typing import Dict, List, Literal, Union
+from typing import Dict, List, Literal, Union, Any, Optional
 from pathlib import Path
 from enum import Enum
 
@@ -66,4 +66,16 @@ class SourceConfig(BaseModel):
 class Config(BaseModel):
     """Main configuration."""
     storage: StorageConfig
-    sources: list[SourceConfig] 
+    sources: list[SourceConfig]
+    client: str = "default"
+
+    def __init__(self, **data):
+        """Initialize configuration from dictionary.
+        
+        Args:
+            config_dict: Dictionary containing configuration
+        """
+        super().__init__(**data)
+        self.client = data.get("client", "default")
+        self.storage = StorageConfig(**data.get("storage", {}))
+        self.sources = [SourceConfig(**s) for s in data.get("sources", [])] 

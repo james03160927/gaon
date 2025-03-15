@@ -1,4 +1,5 @@
 {
+    "client": "test-client",
     "storage": {
         "bucket_name": "raw_input_data",
         "credentials_path": "gaon-integrate-service-account-credentials.json"

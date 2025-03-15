@@ -103,6 +103,6 @@ class BaseIntegrate(ABC):
         temp_dir = Path("temp")
         temp_dir.mkdir(exist_ok=True)
         
-        temp_file = temp_dir / f"{self.source_config.name}_batch_{batch_number}.csv"
+        temp_file = temp_dir / f"{batch_number}.csv"
         logger.info(f"Created temporary file at: {temp_file.absolute()}")
         return temp_file
